@@ -9,6 +9,10 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-24.04
+    strategy:
+        fail-fast: false
+        matrix:
+            browsers: [chrome, firefox, edge]
 
     steps:
       - name: Checkout
@@ -17,7 +21,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Cypress run
+      - name: Cypress run in ${{ matrix.browsers }}
         uses: cypress-io/github-action@v6
+        with:
+            browsers: ${{ matrix.browsers }}    
+            command: npx cypress run --browser ${{ matrix.browsers }} --reporter mochawesome --reporter-options reportDir=cypress/reports/${{ matrix.browsers }}
+
+
+      - name: Merge Mochawesome Reports
+        run: npx mochawesome-merge cypress/reports/${{ matrix.browsers }}/*.json > cypress/reports/${{ matrix.browsers }}/merged-reports.json
 
         #trigger workflow
